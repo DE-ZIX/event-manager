@@ -1,11 +1,9 @@
 package com.eventmanager.demo.author;
 
 import com.eventmanager.demo.resource.Resource;
-import org.hibernate.annotations.GenericGenerator;
 
 import javax.persistence.*;
 import javax.validation.constraints.Pattern;
-import javax.validation.constraints.Size;
 import java.util.List;
 
 @Entity
@@ -44,4 +42,57 @@ public class Author {
 
     @ManyToMany
     public List<Resource> resources;
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public void setSurname(String surname) {
+        this.surname = surname;
+    }
+
+    public void setAffiliation(String affiliation) {
+        this.affiliation = affiliation;
+    }
+
+    public void setOrcid(String orcid) {
+        this.orcid = orcid;
+    }
+
+    public void setResources(List<Resource> resources) {
+        this.resources = resources;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public int getId() {
+        return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public String getSurname() {
+        return surname;
+    }
+
+    public String getAffiliation() {
+        return affiliation;
+    }
+
+    public String getOrcid() {
+        return orcid;
+    }
+
+    public List<Resource> getResources() {
+        return resources;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
 }
