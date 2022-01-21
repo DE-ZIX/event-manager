@@ -25,9 +25,8 @@ public class Author {
     }
 
     @Id
-    @GeneratedValue(generator="system-uuid")
-    @GenericGenerator(name="system-uuid", strategy = "uuid")
-    public String id;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    public int id;
 
     public String email;
 
