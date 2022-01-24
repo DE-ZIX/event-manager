@@ -7,6 +7,7 @@ import javax.validation.constraints.Size;
 import java.util.List;
 
 @Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Collection {
 
     public Collection() {

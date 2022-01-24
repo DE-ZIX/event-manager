@@ -36,10 +36,10 @@ public class Resource {
     @Lob
     public byte[] image;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
     public Date createdDate;
 
-    @DateTimeFormat(pattern = "yyyy/MM/dd")
+    @DateTimeFormat(pattern = "dd/MM/yyyy")
     public Date updatedDate;
 
     @ElementCollection
