@@ -1,5 +1,6 @@
 package com.eventmanager.demo.author;
 
+import com.eventmanager.demo.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
@@ -16,8 +17,17 @@ public class AuthorController {
     private AuthorRepository authorRepository;
 
     @GetMapping
-    public @ResponseBody Iterable<Author> getAuthors() {
+    public @ResponseBody Iterable<Author> getAuthors(@RequestParam(value = "surname", required=false) String surname) {
+        if (surname != null) {
+            return authorRepository.findBySurnameContaining(surname);
+        }
         return authorRepository.findAll();
+    }
+
+    @GetMapping(path="/{id}/resources")
+    public @ResponseBody Iterable<Resource> getResource(@PathVariable int id) {
+        Author author = authorRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Author not found"));
+        return author.getResources();
     }
 
     @GetMapping(path="/{id}")
@@ -44,6 +54,7 @@ public class AuthorController {
         author.setEmail(authorParam.getEmail());
         author.setOrcid(authorParam.getOrcid());
         author.setAffiliation(authorParam.getAffiliation());
+        // authorParam.getResources().forEach(author.getAffiliation()::add);
         author.setResources(authorParam.getResources());
         authorRepository.save(author);
         return author;

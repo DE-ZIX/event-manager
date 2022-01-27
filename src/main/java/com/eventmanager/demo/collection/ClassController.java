@@ -1,5 +1,7 @@
 package com.eventmanager.demo.collection;
 
+import com.eventmanager.demo.author.Author;
+import com.eventmanager.demo.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,12 @@ public class ClassController {
         return classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Class not found"));
     }
 
+    @GetMapping(path="/{id}/resources")
+    public @ResponseBody Iterable<Resource> getResource(@PathVariable int id) {
+        ClassCollection classAux = classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Class not found"));
+        return classAux.getResources();
+    }
+
     @PostMapping
     public @ResponseBody ClassCollection createClass(@RequestBody ClassCollection classIn) {
         return classRepository.save(classIn);
@@ -34,8 +42,9 @@ public class ClassController {
         return classRepository.findById(classIn.id).map(c -> {
             c.setTitle(classIn.getTitle());
             c.setDescription(classIn.getDescription());
-            c.setUpdatedDate(classIn.getUpdatedDate());
-            return classRepository.save(c);
+            c.setResources(classIn.getResources());
+            classRepository.save(c);
+            return c;
         }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Class not found"));
     }
 

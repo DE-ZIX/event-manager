@@ -29,7 +29,7 @@ public class Collection {
     @Lob
     public byte[] image;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public List<Resource> resources;
 
     @Size(max=1024)

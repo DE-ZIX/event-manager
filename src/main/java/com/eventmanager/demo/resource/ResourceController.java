@@ -15,7 +15,16 @@ public class ResourceController {
     private ResourceRepository resourceRepository;
 
     @GetMapping
-    public @ResponseBody Iterable<Resource> getAllResources() {
+    public @ResponseBody Iterable<Resource> getAllResources(@RequestParam(value = "author", required=false) Integer author, @RequestParam(value = "collection", required=false) Integer collection) {
+        if(author != null && collection != null) {
+            return resourceRepository.findResourceByAuthorsIdAndCollectionsId(author, collection);
+        }
+        if (author != null) {
+            return resourceRepository.findResourceByAuthorsId(author);
+        }
+        if (collection != null) {
+            return resourceRepository.findResourceByCollectionsId(collection);
+        }
         return resourceRepository.findAll();
     }
 

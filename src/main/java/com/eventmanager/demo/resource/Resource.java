@@ -3,6 +3,7 @@ package com.eventmanager.demo.resource;
 import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.collection.Collection;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -28,27 +29,27 @@ public class Resource {
     @Column(length = 4096)
     public String description;
 
-    @ManyToOne
+    @ManyToOne(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public Author responsibleAuthor;
 
     public String link;
 
     @Lob
     public byte[] image;
-
+    @JsonFormat(pattern="dd/MM/yyyy")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     public Date createdDate;
-
+    @JsonFormat(pattern="dd/MM/yyyy")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     public Date updatedDate;
 
     @ElementCollection
     public List<String> keywords;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public List<Collection> collections;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public List<Author> authors;
 
     public Integer getId() {
@@ -137,5 +138,15 @@ public class Resource {
 
     public void setCollections(List<Collection> collections) {
         this.collections = collections;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdDate = new Date();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedDate = new Date();
     }
 }

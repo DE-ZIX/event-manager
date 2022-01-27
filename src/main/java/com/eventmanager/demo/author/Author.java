@@ -40,7 +40,7 @@ public class Author {
     @Pattern(regexp = "XXXX-XXXX-XXXX-XXXX")
     public String orcid;
 
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public List<Resource> resources;
 
     public void setName(String name) {
