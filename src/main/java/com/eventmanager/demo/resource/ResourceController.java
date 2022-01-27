@@ -43,6 +43,9 @@ public class ResourceController {
         return resourceRepository.findById(resource.id).map(r -> {
             r.setTitle(resource.getTitle());
             r.setDescription(resource.getDescription());
+            r.setLink(resource.getLink());
+            r.setKeywords(resource.getKeywords());
+            r.setResponsibleAuthor(resource.getResponsibleAuthor());
             return resourceRepository.save(r);
         }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Collection not found"));
     }
