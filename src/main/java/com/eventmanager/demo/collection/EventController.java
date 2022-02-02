@@ -1,5 +1,7 @@
 package com.eventmanager.demo.collection;
 
+import com.eventmanager.demo.ConsultList.ConsultList;
+import com.eventmanager.demo.ConsultList.ConsultListMetadata;
 import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,9 +10,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
+import java.util.*;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -22,16 +22,18 @@ public class EventController {
 
     @GetMapping
     public @ResponseBody
-    Iterable<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate) {
+    ConsultList<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate) {
+        List<EventCollection> events = new ArrayList<>();
+        long eventCount = 0;
         if(startDate == null && endDate == null) {
-            return eventRepository.findAll();
-        /*} else if(startDate != null && endDate == null) {
-            return eventRepository.findByStartDateGreaterThanEqual(startDate);
-        } else if(startDate == null && endDate != null) {
-            return eventRepository.findByEndDateLessThanEqual(endDate);*/
+            events = (List<EventCollection>) eventRepository.findAll();
+            eventCount = eventRepository.count();
         } else {
-            return eventRepository.findBetweenDate(startDate, endDate);
+            events = eventRepository.findBetweenDate(startDate, endDate);
+            eventCount = eventRepository.countBetweenDate(startDate, endDate);
         }
+        ConsultListMetadata consultListMetadata = new ConsultListMetadata(eventCount);
+        return new ConsultList<>((ArrayList<EventCollection>) events, consultListMetadata);
     }
 
     @GetMapping(path="/{id}")

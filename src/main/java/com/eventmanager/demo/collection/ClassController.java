@@ -1,11 +1,16 @@
 package com.eventmanager.demo.collection;
 
+import com.eventmanager.demo.ConsultList.ConsultList;
+import com.eventmanager.demo.ConsultList.ConsultListMetadata;
 import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.resource.Resource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -17,8 +22,11 @@ public class ClassController {
 
     @GetMapping
     public @ResponseBody
-    Iterable<ClassCollection> getClasses() {
-        return classRepository.findAll();
+    ConsultList<ClassCollection> getClasses() {
+        List<ClassCollection> classes = (List<ClassCollection>) classRepository.findAll();
+        long count = classRepository.count();
+        ConsultListMetadata consultListMetadata = new ConsultListMetadata(count);
+        return new ConsultList<>((ArrayList<ClassCollection>) classes, consultListMetadata);
     }
 
     @GetMapping(path="/{id}")
