@@ -4,6 +4,9 @@ import com.eventmanager.demo.ConsultList.ConsultList;
 import com.eventmanager.demo.ConsultList.ConsultListMetadata;
 import com.eventmanager.demo.collection.Collection;
 import com.eventmanager.demo.pagination.Pagination;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -17,40 +20,38 @@ import java.util.List;
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
 @Controller
-@RequestMapping(path="/resources")
+@RequestMapping(path = "/resources")
 public class ResourceController {
     @Autowired
     private ResourceRepository resourceRepository;
 
     @GetMapping
-    public @ResponseBody ConsultList<Resource> getAllResources(@RequestParam(value = "author", required=false) Integer author, @RequestParam(value = "collection", required=false) Integer collection, @RequestParam(value = "pagination", required=false) Pagination pagination) {
+    public @ResponseBody
+    ConsultList<Resource> getAllResources(@RequestParam(value = "author", required = false) Integer author, @RequestParam(value = "collection", required = false) Integer collection, @RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
         List<Resource> resources = new ArrayList<>();
-        Pagination paginationObject = new Pagination();
-        if (pagination != null) {
-            paginationObject = pagination;
-        }
-        paginationObject.init();
-
-        PageRequest pageRequest;
-        if (paginationObject.sortBy != null && !paginationObject.sortBy.isEmpty()) {
-            pageRequest = PageRequest.of(paginationObject.page, paginationObject.limit, Sort.by(paginationObject.descending ? Sort.Direction.DESC : Sort.Direction.ASC, paginationObject.sortBy));
-        } else {
-            pageRequest = PageRequest.of(paginationObject.page, paginationObject.limit);
-        }
         long resourceCount = 0;
+        Pagination<Resource> pag = new Pagination<>();
+        Pagination<Resource> paginationObject = new Pagination<>();
+        if (pagination != null && !pagination.isEmpty()) {
+            pag = new ObjectMapper().readValue(pagination, new TypeReference<>() {
+            });
+        }
+        if (pag != null) {
+            paginationObject = pag;
+        }
+        paginationObject.init(Resource.class);
+
+        PageRequest pageRequest = paginationObject.toPageRequest();
         if (author != null && collection != null) {
             resources = resourceRepository.findResourceByAuthorsIdAndCollectionsId(author, collection, pageRequest);
             resourceCount = resourceRepository.countByAuthorsIdAndCollectionsId(author, collection);
-        }
-        else if (author != null) {
+        } else if (author != null) {
             resources = resourceRepository.findResourceByAuthorsId(author, pageRequest);
             resourceCount = resourceRepository.countByAuthorsId(author);
-        }
-        else if (collection != null) {
+        } else if (collection != null) {
             resources = resourceRepository.findResourceByCollectionsId(collection, pageRequest);
             resourceCount = resourceRepository.countByCollectionsId(collection);
-        }
-        else {
+        } else {
             resources = resourceRepository.findAll(pageRequest).getContent();
             resourceCount = resourceRepository.count();
         }
@@ -58,18 +59,21 @@ public class ResourceController {
         return new ConsultList<>(resources, consultListMetadata);
     }
 
-    @GetMapping(path="/{id}")
-    public @ResponseBody Resource getResource(@PathVariable int id) {
+    @GetMapping(path = "/{id}")
+    public @ResponseBody
+    Resource getResource(@PathVariable int id) {
         return resourceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
     }
 
     @PostMapping
-    public @ResponseBody Resource createResource(@RequestBody Resource resource) {
+    public @ResponseBody
+    Resource createResource(@RequestBody Resource resource) {
         return resourceRepository.save(resource);
     }
 
     @PutMapping
-    public @ResponseBody Resource updateResource(@RequestBody Resource resource) {
+    public @ResponseBody
+    Resource updateResource(@RequestBody Resource resource) {
         return resourceRepository.findById(resource.id).map(r -> {
             r.setTitle(resource.getTitle());
             r.setDescription(resource.getDescription());
@@ -80,8 +84,9 @@ public class ResourceController {
         }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Collection not found"));
     }
 
-    @DeleteMapping(path="/{id}")
-    public @ResponseBody String deleteResource(@PathVariable int id) {
+    @DeleteMapping(path = "/{id}")
+    public @ResponseBody
+    String deleteResource(@PathVariable int id) {
         resourceRepository.deleteById(id);
         return "Resource deleted";
     }
