@@ -5,6 +5,7 @@ import com.eventmanager.demo.ConsultList.ConsultListMetadata;
 import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.pagination.Pagination;
 import com.eventmanager.demo.resource.Resource;
+import com.eventmanager.demo.resource.ResourceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,10 +25,12 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class EventController {
     @Autowired
     private EventRepository eventRepository;
+    @Autowired
+    private ResourceRepository resourceRepository;
 
     @GetMapping
     public @ResponseBody
-    ConsultList<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate, @RequestParam(value = "pagination", required=false) String pagination)  throws JsonProcessingException {
+    ConsultList<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate, @RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required=false) String pagination)  throws JsonProcessingException {
         List<EventCollection> events;
         long eventCount = 0;
         Pagination<EventCollection> pag = new Pagination<>();
@@ -40,12 +43,16 @@ public class EventController {
         }
         paginationObject.init(EventCollection.class);
         PageRequest pageRequest = paginationObject.toPageRequest();
-        if(startDate == null && endDate == null) {
+        if(startDate == null && endDate == null && resource == null) {
             events = eventRepository.findAll(pageRequest).getContent();
             eventCount = eventRepository.count();
         } else {
             events = eventRepository.findBetweenDate(startDate, endDate, pageRequest);
             eventCount = eventRepository.countBetweenDate(startDate, endDate);
+        }
+        if (resource != null) {
+            events = eventRepository.findByResourcesId(resource, pageRequest);
+            eventCount = eventRepository.countByResourcesId(resource);
         }
         ConsultListMetadata consultListMetadata = new ConsultListMetadata(eventCount);
         return new ConsultList<>(events, consultListMetadata);
@@ -60,6 +67,15 @@ public class EventController {
     public @ResponseBody Iterable<Resource> getResource(@PathVariable int id) {
         EventCollection event = eventRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
         return event.getResources();
+    }
+
+    @GetMapping(path="/{id}/{resourceId}")
+    public @ResponseBody EventCollection addResource(@PathVariable int id, @PathVariable int resourceId) {
+        EventCollection event = eventRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
+        Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
+        event.resources.add(resource);
+        eventRepository.save(event);
+        return event;
     }
 
     @PostMapping

@@ -77,4 +77,5 @@ public class Collection {
     public void setDescription(String description) {
         this.description = description;
     }
+
 }

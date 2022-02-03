@@ -13,4 +13,6 @@ public interface EventRepository extends PagingAndSortingRepository<EventCollect
     List<EventCollection> findBetweenDate(Date startDate, Date endDate, Pageable pageable);
     @Query("SELECT COUNT(m.id) FROM EventCollection m WHERE (:startDate is null or m.startDate >= :startDate) and (:endDate is null or m.endDate <= :endDate)")
     long countBetweenDate(Date startDate, Date endDate);
+    List<EventCollection> findByResourcesId(int resourceId, Pageable pageable);
+    long countByResourcesId(int resourceId);
 }

@@ -5,6 +5,7 @@ import com.eventmanager.demo.ConsultList.ConsultListMetadata;
 import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.pagination.Pagination;
 import com.eventmanager.demo.resource.Resource;
+import com.eventmanager.demo.resource.ResourceRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -24,13 +25,16 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ClassController {
     @Autowired
     private ClassRepository classRepository;
+    @Autowired
+    private ResourceRepository resourceRepository;
 
     @GetMapping
     public @ResponseBody
-    ConsultList<ClassCollection> getClasses(@RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
+    ConsultList<ClassCollection> getClasses(@RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
         List<ClassCollection> classes;
         Pagination<ClassCollection> pag = new Pagination<>();
         Pagination<ClassCollection> paginationObject = new Pagination<>();
+        long count = 0;
         if (pagination != null && !pagination.isEmpty()) {
             pag = new ObjectMapper().readValue(pagination, new TypeReference<>() {
             });
@@ -40,8 +44,13 @@ public class ClassController {
         }
         paginationObject.init(ClassCollection.class);
         PageRequest pageRequest = paginationObject.toPageRequest();
-        classes = classRepository.findAll(pageRequest).getContent();
-        long count = classRepository.count();
+        if (resource != null) {
+            classes = classRepository.findByResourcesId(resource, pageRequest);
+            count = classRepository.countByResourcesId(resource);
+        } else {
+            classes = classRepository.findAll(pageRequest).getContent();
+            count = classRepository.count();
+        }
         ConsultListMetadata consultListMetadata = new ConsultListMetadata(count);
         return new ConsultList<>(classes, consultListMetadata);
     }
@@ -50,6 +59,16 @@ public class ClassController {
     public @ResponseBody
     ClassCollection getClass(@PathVariable int id) {
         return classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Class not found"));
+    }
+
+
+    @GetMapping(path="/{id}/{resourceId}")
+    public @ResponseBody ClassCollection addResource(@PathVariable int id, @PathVariable int resourceId) {
+        ClassCollection classFind = classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
+        Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
+        classFind.resources.add(resource);
+        classRepository.save(classFind);
+        return classFind;
     }
 
     @GetMapping(path = "/{id}/resources")
