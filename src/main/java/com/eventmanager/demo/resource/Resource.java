@@ -4,6 +4,9 @@ import com.eventmanager.demo.author.Author;
 import com.eventmanager.demo.collection.Collection;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ByteArraySerializer;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.util.Date;
@@ -36,6 +39,10 @@ public class Resource {
 
     @Lob
     public byte[] image;
+
+    public String imageFileName;
+
+    public String imageFileType;
     @JsonFormat(pattern="dd/MM/yyyy")
     @DateTimeFormat(pattern = "dd/MM/yyyy")
     public Date createdDate;
@@ -99,6 +106,14 @@ public class Resource {
     public void setImage(byte[] image) {
         this.image = image;
     }
+
+    public String getImageFileName() { return imageFileName; }
+
+    public void setImageFileName(String imageFileName) { this.imageFileName = imageFileName; }
+
+    public String getImageFileType() { return imageFileType; }
+
+    public void setImageFileType(String imageFileType) { this.imageFileType = imageFileType; }
 
     public Date getCreatedDate() {
         return createdDate;

@@ -78,6 +78,9 @@ public class ResourceController {
             r.setTitle(resource.getTitle());
             r.setDescription(resource.getDescription());
             r.setLink(resource.getLink());
+            r.setImage(resource.getImage());
+            r.setImageFileName(resource.getImageFileName());
+            r.setImageFileType(resource.getImageFileType());
             r.setKeywords(resource.getKeywords());
             r.setResponsibleAuthor(resource.getResponsibleAuthor());
             return resourceRepository.save(r);
