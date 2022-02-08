@@ -30,7 +30,7 @@ public class ClassController {
 
     @GetMapping
     public @ResponseBody
-    ConsultList<ClassCollection> getClasses(@RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
+    ConsultList<ClassCollection> getClasses(@RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required = false) String pagination, @RequestParam(value = "notInResource", required = false) Integer notInResource) throws JsonProcessingException {
         List<ClassCollection> classes;
         Pagination<ClassCollection> pag = new Pagination<>();
         Pagination<ClassCollection> paginationObject = new Pagination<>();
@@ -47,6 +47,9 @@ public class ClassController {
         if (resource != null) {
             classes = classRepository.findByResourcesId(resource, pageRequest);
             count = classRepository.countByResourcesId(resource);
+        } else if (notInResource != null) {
+            classes = classRepository.findByResourcesIdNot(notInResource, pageRequest);
+            count = classRepository.countByResourcesIdNot(notInResource);
         } else {
             classes = classRepository.findAll(pageRequest).getContent();
             count = classRepository.count();
@@ -67,15 +70,42 @@ public class ClassController {
         ClassCollection classFind = classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
         Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
         classFind.resources.add(resource);
+        resource.collections.add(classFind);
         classRepository.save(classFind);
+        resourceRepository.save(resource);
         return classFind;
+    }
+
+    @DeleteMapping(path="/{id}/{resourceId}/remove")
+    public @ResponseBody String removeResource(@PathVariable int id, @PathVariable int resourceId) {
+        ClassCollection classFind = classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
+        Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
+        classFind.resources.remove(resource);
+        resource.collections.remove(classFind);
+        classRepository.save(classFind);
+        resourceRepository.save(resource);
+        return "Resource removed";
     }
 
     @GetMapping(path = "/{id}/resources")
     public @ResponseBody
-    Iterable<Resource> getResource(@PathVariable int id) {
+    ConsultList<Resource> getResource(@PathVariable int id, @RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
         ClassCollection classAux = classRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Class not found"));
-        return classAux.getResources();
+        long resourceCount = 0;
+        Pagination<Resource> pag = new Pagination<>();
+        Pagination<Resource> paginationObject = new Pagination<>();
+        if (pagination != null && !pagination.isEmpty()) {
+            pag = new ObjectMapper().readValue(pagination, new TypeReference<>() {
+            });
+        }
+        if (pag != null) {
+            paginationObject = pag;
+        }
+        paginationObject.init(Resource.class);
+        PageRequest pageRequest = paginationObject.toPageRequest();
+        ConsultListMetadata consultListMetadata = new ConsultListMetadata(resourceCount);
+        List<Resource> resources = resourceRepository.findResourceByCollectionsId(classAux.getId(), pageRequest);
+        return new ConsultList<>(resources, consultListMetadata);
     }
 
     @PostMapping
@@ -89,6 +119,9 @@ public class ClassController {
     ClassCollection updateClass(@RequestBody ClassCollection classIn) {
         return classRepository.findById(classIn.id).map(c -> {
             c.setTitle(classIn.getTitle());
+            c.setImage(classIn.getImage());
+            c.setImageFileName(classIn.getImageFileName());
+            c.setImageFileType(classIn.getImageFileType());
             c.setDescription(classIn.getDescription());
             c.setResources(classIn.getResources());
             classRepository.save(c);

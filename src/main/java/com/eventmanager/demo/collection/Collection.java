@@ -1,12 +1,16 @@
 package com.eventmanager.demo.collection;
 
 import com.eventmanager.demo.resource.Resource;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import javax.persistence.*;
 import javax.validation.constraints.Size;
 import java.util.List;
 
 @Entity
+@JsonIdentityInfo(generator= ObjectIdGenerators.UUIDGenerator.class, property="@id")
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 public class Collection {
 
@@ -29,6 +33,11 @@ public class Collection {
     @Lob
     public byte[] image;
 
+    public String imageFileName;
+
+    public String imageFileType;
+
+    @JsonIgnore
     @ManyToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     public List<Resource> resources;
 
@@ -77,5 +86,13 @@ public class Collection {
     public void setDescription(String description) {
         this.description = description;
     }
+
+    public String getImageFileName() { return imageFileName; }
+
+    public void setImageFileName(String imageFileName) { this.imageFileName = imageFileName; }
+
+    public String getImageFileType() { return imageFileType; }
+
+    public void setImageFileType(String imageFileType) { this.imageFileType = imageFileType; }
 
 }

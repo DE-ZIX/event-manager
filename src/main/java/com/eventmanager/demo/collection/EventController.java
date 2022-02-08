@@ -30,7 +30,7 @@ public class EventController {
 
     @GetMapping
     public @ResponseBody
-    ConsultList<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate, @RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required=false) String pagination)  throws JsonProcessingException {
+    ConsultList<EventCollection> getEvents(@RequestParam(value="startDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date startDate, @RequestParam(value="endDate", required=false) @DateTimeFormat(pattern = "dd/MM/yyyy") Date endDate, @RequestParam(value = "resource", required = false) Integer resource, @RequestParam(value = "pagination", required=false) String pagination, @RequestParam(value = "notInResource", required = false) Integer notInResource)  throws JsonProcessingException {
         List<EventCollection> events;
         long eventCount = 0;
         Pagination<EventCollection> pag = new Pagination<>();
@@ -53,6 +53,9 @@ public class EventController {
         if (resource != null) {
             events = eventRepository.findByResourcesId(resource, pageRequest);
             eventCount = eventRepository.countByResourcesId(resource);
+        }  else if (notInResource != null) {
+            events = eventRepository.findByResourcesIdNot(notInResource, pageRequest);
+            eventCount = eventRepository.countByResourcesIdNot(notInResource);
         }
         ConsultListMetadata consultListMetadata = new ConsultListMetadata(eventCount);
         return new ConsultList<>(events, consultListMetadata);
@@ -64,9 +67,25 @@ public class EventController {
     }
 
     @GetMapping(path="/{id}/resources")
-    public @ResponseBody Iterable<Resource> getResource(@PathVariable int id) {
+    public @ResponseBody ConsultList<Resource> getResource(@PathVariable int id, @RequestParam(value = "pagination", required = false) String pagination, @RequestParam(value = "notInResource", required = false) Integer notInResource) throws JsonProcessingException {
         EventCollection event = eventRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
-        return event.getResources();
+        long resourceCount = 0;
+        Pagination<Resource> pag = new Pagination<>();
+        Pagination<Resource> paginationObject = new Pagination<>();
+        if (pagination != null && !pagination.isEmpty()) {
+            pag = new ObjectMapper().readValue(pagination, new TypeReference<>() {
+            });
+        }
+        if (pag != null) {
+            paginationObject = pag;
+        }
+        paginationObject.init(Resource.class);
+
+        PageRequest pageRequest = paginationObject.toPageRequest();
+        resourceCount = resourceRepository.countByCollectionsId(event.getId());
+        ConsultListMetadata consultListMetadata = new ConsultListMetadata(resourceCount);
+        List<Resource> resources = resourceRepository.findByCollectionsId(event.getId(), pageRequest);
+        return new ConsultList<>(resources, consultListMetadata);
     }
 
     @GetMapping(path="/{id}/{resourceId}")
@@ -75,7 +94,20 @@ public class EventController {
         Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
         event.resources.add(resource);
         eventRepository.save(event);
+        resource.collections.add(event);
+        resourceRepository.save(resource);
         return event;
+    }
+
+    @DeleteMapping(path="/{id}/{resourceId}/remove")
+    public @ResponseBody String removeResource(@PathVariable int id, @PathVariable int resourceId) {
+        EventCollection event = eventRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
+        Resource resource = resourceRepository.findById(resourceId).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
+        event.resources.remove(resource);
+        eventRepository.save(event);
+        resource.collections.remove(event);
+        resourceRepository.save(resource);
+        return "Resource removed";
     }
 
     @PostMapping
@@ -89,10 +121,12 @@ public class EventController {
         event.zeroHours();
         return eventRepository.findById(event.id).map(e -> {
             e.setTitle(event.getTitle());
+            e.setImage(event.getImage());
+            e.setImageFileName(event.getImageFileName());
+            e.setImageFileType(event.getImageFileType());
             e.setDescription(event.getDescription());
             e.setStartDate(event.getStartDate());
             e.setEndDate(event.getEndDate());
-            e.setResources(event.getResources());
             return eventRepository.save(e);
         }).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Event not found"));
     }

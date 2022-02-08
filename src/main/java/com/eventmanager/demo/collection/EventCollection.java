@@ -2,6 +2,8 @@ package com.eventmanager.demo.collection;
 
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.*;
@@ -10,6 +12,7 @@ import java.util.Date;
 import java.util.GregorianCalendar;
 
 @Entity
+@JsonIdentityInfo(generator= ObjectIdGenerators.UUIDGenerator.class, property="@id")
 public class EventCollection extends Collection {
     @JsonFormat(pattern="dd/MM/yyyy")
     @DateTimeFormat(pattern = "dd/MM/yyyy")

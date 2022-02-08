@@ -1,8 +1,6 @@
 package com.eventmanager.demo.collection;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.util.Date;
@@ -15,4 +13,8 @@ public interface EventRepository extends PagingAndSortingRepository<EventCollect
     long countBetweenDate(Date startDate, Date endDate);
     List<EventCollection> findByResourcesId(int resourceId, Pageable pageable);
     long countByResourcesId(int resourceId);
+    @Query(value = "select * from event_collection as ec left join resource_collections as rc on ec.id = rc.collections_id where rc.resource_id not in (:id) or rc.resource_id is null", nativeQuery = true)
+    List<EventCollection> findByResourcesIdNot(int id, Pageable pageable);
+    @Query(value = "select distinct count(ec.id) from event_collection as ec left join resource_collections as rc on ec.id = rc.collections_id where rc.resource_id not in (:id) or rc.resource_id is null", nativeQuery = true)
+    long countByResourcesIdNot(int id);
 }

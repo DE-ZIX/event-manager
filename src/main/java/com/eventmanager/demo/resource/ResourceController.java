@@ -2,6 +2,7 @@ package com.eventmanager.demo.resource;
 
 import com.eventmanager.demo.ConsultList.ConsultList;
 import com.eventmanager.demo.ConsultList.ConsultListMetadata;
+import com.eventmanager.demo.collection.ClassCollection;
 import com.eventmanager.demo.collection.Collection;
 import com.eventmanager.demo.pagination.Pagination;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,7 +10,6 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,7 +27,7 @@ public class ResourceController {
 
     @GetMapping
     public @ResponseBody
-    ConsultList<Resource> getAllResources(@RequestParam(value = "author", required = false) Integer author, @RequestParam(value = "collection", required = false) Integer collection, @RequestParam(value = "pagination", required = false) String pagination) throws JsonProcessingException {
+    ConsultList<Resource> getAllResources(@RequestParam(value = "author", required = false) Integer author, @RequestParam(value = "collection", required = false) Integer collection, @RequestParam(value = "pagination", required = false) String pagination, @RequestParam(value = "notInCollection", required = false) Integer notInCollection) throws JsonProcessingException {
         List<Resource> resources = new ArrayList<>();
         long resourceCount = 0;
         Pagination<Resource> pag = new Pagination<>();
@@ -51,6 +51,9 @@ public class ResourceController {
         } else if (collection != null) {
             resources = resourceRepository.findResourceByCollectionsId(collection, pageRequest);
             resourceCount = resourceRepository.countByCollectionsId(collection);
+        } else if(notInCollection != null){
+            resources = resourceRepository.findByCollectionsIdNot(notInCollection, pageRequest);
+            resourceCount = resourceRepository.countByCollectionsIdNot(notInCollection);
         } else {
             resources = resourceRepository.findAll(pageRequest).getContent();
             resourceCount = resourceRepository.count();
