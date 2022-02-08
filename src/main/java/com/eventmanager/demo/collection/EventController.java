@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -54,8 +55,16 @@ public class EventController {
             events = eventRepository.findByResourcesId(resource, pageRequest);
             eventCount = eventRepository.countByResourcesId(resource);
         }  else if (notInResource != null) {
-            events = eventRepository.findByResourcesIdNot(notInResource, pageRequest);
-            eventCount = eventRepository.countByResourcesIdNot(notInResource);
+
+            List<Integer> notThese = eventRepository.findIdByResourcesId(notInResource).stream().map(EventCollection::getId).collect(Collectors.toList());
+            if (notThese.size() > 0) {
+                events = eventRepository.findByIdNotIn(notThese, pageRequest);
+                eventCount = eventRepository.countByIdNotIn(notThese);
+
+            } else {
+                events = eventRepository.findAll(pageRequest).getContent();
+                eventCount = eventRepository.count();
+            }
         }
         ConsultListMetadata consultListMetadata = new ConsultListMetadata(eventCount);
         return new ConsultList<>(events, consultListMetadata);

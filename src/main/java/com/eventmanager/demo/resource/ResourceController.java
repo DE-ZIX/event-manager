@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
 
@@ -52,8 +53,14 @@ public class ResourceController {
             resources = resourceRepository.findResourceByCollectionsId(collection, pageRequest);
             resourceCount = resourceRepository.countByCollectionsId(collection);
         } else if(notInCollection != null){
-            resources = resourceRepository.findByCollectionsIdNot(notInCollection, pageRequest);
-            resourceCount = resourceRepository.countByCollectionsIdNot(notInCollection);
+            List<Integer> notTheseCollections = resourceRepository.findIdByCollectionsId(notInCollection).stream().map(Resource::getId).collect(Collectors.toList());
+            if(notTheseCollections.size() > 0) {
+                resources = resourceRepository.findByIdNotIn(notTheseCollections, pageRequest);
+                resourceCount = resourceRepository.countByIdNotIn(notTheseCollections);
+            } else {
+                resources = resourceRepository.findAll(pageRequest).getContent();
+                resourceCount = resourceRepository.count();
+            }
         } else {
             resources = resourceRepository.findAll(pageRequest).getContent();
             resourceCount = resourceRepository.count();

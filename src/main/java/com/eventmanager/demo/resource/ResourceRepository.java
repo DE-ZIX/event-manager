@@ -12,12 +12,14 @@ public interface ResourceRepository extends PagingAndSortingRepository<Resource,
     List<Resource> findResourceByCollectionsId(Integer id, Pageable pageable);
     List<Resource> findByCollectionsId(Integer id, Pageable pageable);
     List<Resource> findResourceByAuthorsIdAndCollectionsId(Integer authorId, Integer collectionId, Pageable pageable);
-    @Query(value = "select * from resource as r left join collection_resources as cr on r.id = cr.resources_id where cr.collection_id not in (:id) or cr.collection_id is null", nativeQuery = true)
+    //@Query(value = "select * from resource as r left join collection_resources as cr on r.id = cr.resources_id where cr.collection_id not in (:id) or cr.collection_id is null", nativeQuery = true)
     List<Resource> findByCollectionsIdNot(Integer id, Pageable pageable);
-    @Query(value = "select distinct count(r.id) from resource as r left join collection_resources as cr on r.id = cr.resources_id where cr.collection_id not in (:id) or cr.collection_id is null", nativeQuery = true)
-
+    //@Query(value = "select distinct count(r.id) from resource as r left join collection_resources as cr on r.id = cr.resources_id where cr.collection_id not in (:id) or cr.collection_id is null", nativeQuery = true)
+    List<Resource> findIdByCollectionsId(Integer id);
+    List<Resource> findByIdNotIn(List<Integer> ids, Pageable pageable);
     long countByCollectionsIdNot(Integer id);
     long countByAuthorsId(Integer id);
     long countByCollectionsId(Integer id);
     long countByAuthorsIdAndCollectionsId(Integer authorId, Integer collectionId);
+    long countByIdNotIn(List<Integer> ids);
 }
