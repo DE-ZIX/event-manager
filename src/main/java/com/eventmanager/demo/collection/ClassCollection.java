@@ -6,6 +6,7 @@ import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.persistence.Entity;
+import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 import java.util.Date;
 
@@ -22,6 +23,11 @@ public class ClassCollection extends Collection {
 
     public void setUpdatedDate(Date updatedDate) {
         this.updatedDate = updatedDate;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        updatedDate = new Date();
     }
 
     @PreUpdate

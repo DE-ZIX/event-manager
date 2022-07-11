@@ -164,6 +164,7 @@ public class Resource {
     @PrePersist
     protected void onCreate() {
         createdDate = new Date();
+        updatedDate = new Date();
     }
 
     @PreUpdate
