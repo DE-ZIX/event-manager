@@ -100,6 +100,11 @@ public class ResourceController {
     @DeleteMapping(path = "/{id}")
     public @ResponseBody
     String deleteResource(@PathVariable int id) {
+        Resource resource = resourceRepository.findById(id).orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Resource not found"));
+        for(Collection collection : resource.collections) {
+            collection.resources.remove(resource);
+        }
+        resourceRepository.save(resource);
         resourceRepository.deleteById(id);
         return "Resource deleted";
     }
